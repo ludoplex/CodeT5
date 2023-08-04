@@ -122,8 +122,14 @@ def set_dist(args):
         torch.distributed.init_process_group(backend='nccl')
         args.n_gpu = 1
     cpu_cont = multiprocessing.cpu_count()
-    logger.warning("Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, cpu count: %d",
-                   args.local_rank, device, args.n_gpu, bool(args.local_rank != -1), cpu_cont)
+    logger.warning(
+        "Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, cpu count: %d",
+        args.local_rank,
+        device,
+        args.n_gpu,
+        args.local_rank != -1,
+        cpu_cont,
+    )
     args.device = device
     args.cpu_cont = cpu_cont
 

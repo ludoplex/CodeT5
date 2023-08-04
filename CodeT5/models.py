@@ -16,8 +16,8 @@ MODEL_CLASSES = {'roberta': (RobertaConfig, RobertaModel, RobertaTokenizer),
 
 def get_model_size(model):
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
-    model_size = sum([np.prod(p.size()) for p in model_parameters])
-    return "{}M".format(round(model_size / 1e+6))
+    model_size = sum(np.prod(p.size()) for p in model_parameters)
+    return f"{round(model_size / 1000000.0)}M"
 
 
 def build_or_load_gen_model(args):
@@ -37,7 +37,7 @@ def build_or_load_gen_model(args):
     logger.info("Finish loading model [%s] from %s", get_model_size(model), args.model_name_or_path)
 
     if args.load_model_path is not None:
-        logger.info("Reload model from {}".format(args.load_model_path))
+        logger.info(f"Reload model from {args.load_model_path}")
         model.load_state_dict(torch.load(args.load_model_path))
 
     return config, model, tokenizer
@@ -77,9 +77,9 @@ class CloneModel(nn.Module):
 
         if len(torch.unique(eos_mask.sum(1))) > 1:
             raise ValueError("All examples must have the same number of <eos> tokens.")
-        vec = hidden_states[eos_mask, :].view(hidden_states.size(0), -1,
-                                              hidden_states.size(-1))[:, -1, :]
-        return vec
+        return hidden_states[eos_mask, :].view(
+            hidden_states.size(0), -1, hidden_states.size(-1)
+        )[:, -1, :]
 
     def get_bart_vec(self, source_ids):
         attention_mask = source_ids.ne(self.tokenizer.pad_token_id)
@@ -90,14 +90,15 @@ class CloneModel(nn.Module):
 
         if len(torch.unique(eos_mask.sum(1))) > 1:
             raise ValueError("All examples must have the same number of <eos> tokens.")
-        vec = hidden_states[eos_mask, :].view(hidden_states.size(0), -1,
-                                              hidden_states.size(-1))[:, -1, :]
-        return vec
+        return hidden_states[eos_mask, :].view(
+            hidden_states.size(0), -1, hidden_states.size(-1)
+        )[:, -1, :]
 
     def get_roberta_vec(self, source_ids):
         attention_mask = source_ids.ne(self.tokenizer.pad_token_id)
-        vec = self.encoder(input_ids=source_ids, attention_mask=attention_mask)[0][:, 0, :]
-        return vec
+        return self.encoder(input_ids=source_ids, attention_mask=attention_mask)[
+            0
+        ][:, 0, :]
 
     def forward(self, source_ids=None, labels=None):
         source_ids = source_ids.view(-1, self.args.max_source_length)
@@ -138,9 +139,9 @@ class DefectModel(nn.Module):
 
         if len(torch.unique(eos_mask.sum(1))) > 1:
             raise ValueError("All examples must have the same number of <eos> tokens.")
-        vec = hidden_states[eos_mask, :].view(hidden_states.size(0), -1,
-                                              hidden_states.size(-1))[:, -1, :]
-        return vec
+        return hidden_states[eos_mask, :].view(
+            hidden_states.size(0), -1, hidden_states.size(-1)
+        )[:, -1, :]
 
     def get_bart_vec(self, source_ids):
         attention_mask = source_ids.ne(self.tokenizer.pad_token_id)
@@ -151,14 +152,15 @@ class DefectModel(nn.Module):
 
         if len(torch.unique(eos_mask.sum(1))) > 1:
             raise ValueError("All examples must have the same number of <eos> tokens.")
-        vec = hidden_states[eos_mask, :].view(hidden_states.size(0), -1,
-                                              hidden_states.size(-1))[:, -1, :]
-        return vec
+        return hidden_states[eos_mask, :].view(
+            hidden_states.size(0), -1, hidden_states.size(-1)
+        )[:, -1, :]
 
     def get_roberta_vec(self, source_ids):
         attention_mask = source_ids.ne(self.tokenizer.pad_token_id)
-        vec = self.encoder(input_ids=source_ids, attention_mask=attention_mask)[0][:, 0, :]
-        return vec
+        return self.encoder(input_ids=source_ids, attention_mask=attention_mask)[
+            0
+        ][:, 0, :]
 
     def forward(self, source_ids=None, labels=None):
         source_ids = source_ids.view(-1, self.args.max_source_length)
@@ -281,8 +283,7 @@ class Seq2Seq(nn.Module):
                         pred]
                 preds.append(torch.cat(pred, 0).unsqueeze(0))
 
-            preds = torch.cat(preds, 0)
-            return preds
+            return torch.cat(preds, 0)
 
 
 class Beam(object):
@@ -305,8 +306,7 @@ class Beam(object):
 
     def getCurrentState(self):
         "Get the outputs for the current timestep."
-        batch = self.tt.LongTensor(self.nextYs[-1]).view(-1, 1)
-        return batch
+        return self.tt.LongTensor(self.nextYs[-1]).view(-1, 1)
 
     def getCurrentOrigin(self):
         "Get the backpointers for the current timestep."
@@ -364,11 +364,11 @@ class Beam(object):
             self.finished.append((self.scores[0], len(self.nextYs) - 1, 0))
         self.finished.sort(key=lambda a: -a[0])
         if len(self.finished) != self.size:
-            unfinished = []
-            for i in range(self.nextYs[-1].size(0)):
-                if self.nextYs[-1][i] != self._eos:
-                    s = self.scores[i]
-                    unfinished.append((s, len(self.nextYs) - 1, i))
+            unfinished = [
+                (self.scores[i], len(self.nextYs) - 1, i)
+                for i in range(self.nextYs[-1].size(0))
+                if self.nextYs[-1][i] != self._eos
+            ]
             unfinished.sort(key=lambda a: -a[0])
             self.finished += unfinished[:self.size - len(self.finished)]
         return self.finished[:self.size]

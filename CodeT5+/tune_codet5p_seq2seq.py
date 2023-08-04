@@ -13,7 +13,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, TrainingArguments
 
 
 def run_training(args, model, train_data):
-    print(f"Starting main loop")
+    print("Starting main loop")
 
     training_args = TrainingArguments(
         report_to='tensorboard',
@@ -108,7 +108,7 @@ def main(args):
     train_data = load_tokenize_data(args)
 
     if args.data_num != -1:
-        train_data = train_data.select([i for i in range(args.data_num)])
+        train_data = train_data.select(list(range(args.data_num)))
 
     # Load model from `args.load`
     model = AutoModelForSeq2SeqLM.from_pretrained(args.load)

@@ -50,8 +50,9 @@ def get_eos_vec(hidden_state, source_ids, eos_token_id):
     eos_mask = source_ids.eq(eos_token_id)
     if len(torch.unique(eos_mask.sum(1))) > 1:
         raise ValueError("All examples must have the same number of <eos> tokens.")
-    dec_vec = hidden_state[eos_mask, :].view(hidden_state.size(0), -1, hidden_state.size(-1))[:, -1, :]
-    return dec_vec
+    return hidden_state[eos_mask, :].view(
+        hidden_state.size(0), -1, hidden_state.size(-1)
+    )[:, -1, :]
 
 
 @torch.no_grad()
@@ -82,7 +83,7 @@ def match_evaluation(model, text_feats, code_feats, tokenizer, device, top_k, im
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    print('Evaluation time {}'.format(total_time_str))
+    print(f'Evaluation time {total_time_str}')
 
     scores_i2t = score_matrix_i2t.cpu().numpy()
 
@@ -97,11 +98,7 @@ def match_evaluation(model, text_feats, code_feats, tokenizer, device, top_k, im
     tr10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
     mrr = 100.0 * np.mean(1 / (ranks + 1))
 
-    eval_result = {'r1': tr1,
-                   'r5': tr5,
-                   'r10': tr10,
-                   'mrr': mrr}
-    return eval_result
+    return {'r1': tr1, 'r5': tr5, 'r10': tr10, 'mrr': mrr}
 
 
 def main(args):

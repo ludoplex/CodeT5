@@ -61,7 +61,7 @@ def main():
     task_ids = sorted(problems.keys())[args.start_index: args.end_index]
     prompts = [problems[task_id]['prompt'] for task_id in task_ids]
     num_samples = len(prompts)
-    print("Number of samples: {}".format(num_samples))
+    print(f"Number of samples: {num_samples}")
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
@@ -73,11 +73,11 @@ def main():
     model.to(device)
 
     # for larger LLMs such as 2B, 6B, and 16B, we need to pass the text prompt to the decoder
-    prompt_to_decoder = True if any([size in args.model for size in ['2b', '6b', '16b']]) else False
+    prompt_to_decoder = any(size in args.model for size in ['2b', '6b', '16b'])
 
     print(f"Loaded {args.model}.")
     for i in tqdm(range(num_samples), ncols=0, total=num_samples):
-        output_file = args.output_path + '/{}.jsonl'.format(args.start_index + i)
+        output_file = f'{args.output_path}/{args.start_index + i}.jsonl'
 
         if os.path.exists(output_file) and not args.overwrite:
             print(f'Skip {output_file} as it already exists')
@@ -154,7 +154,7 @@ def main():
                          }
                     )
 
-        print("Saving results to {}".format(output_file))
+        print(f"Saving results to {output_file}")
         write_jsonl(output_file, completion_seqs)
 
 

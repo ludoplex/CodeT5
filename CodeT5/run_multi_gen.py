@@ -50,19 +50,16 @@ WORKER_NUM = 0
 
 
 def get_max_trg_len_by_task(task, sub_task):
-    if task == 'summarize':
-        max_target_length = 128
-    elif task == 'translate':
-        max_target_length = 256
-    elif task == 'refine':
-        if sub_task == 'small':
-            max_target_length = 120
-        else:
-            max_target_length = 240
-    elif task == 'concode':
+    if task == 'concode':
         max_target_length = 150
     elif task == 'defect':
         max_target_length = 3
+    elif task == 'refine':
+        max_target_length = 120 if sub_task == 'small' else 240
+    elif task == 'summarize':
+        max_target_length = 128
+    elif task == 'translate':
+        max_target_length = 256
     return max_target_length
 
 
@@ -96,7 +93,7 @@ def eval_bleu(args, eval_data, eval_examples, model, tokenizer, split_tag, cur_t
 
     model.eval()
     pred_ids = []
-    for batch in tqdm(eval_dataloader, total=len(eval_dataloader), desc="Eval bleu for {} set".format(split_tag)):
+    for batch in tqdm(eval_dataloader, total=len(eval_dataloader), desc=f"Eval bleu for {split_tag} set"):
         source_ids = batch[0].to(args.device)
         source_mask = source_ids.ne(tokenizer.pad_token_id)
         with torch.no_grad():
@@ -127,8 +124,8 @@ def eval_bleu(args, eval_data, eval_examples, model, tokenizer, split_tag, cur_t
         res_dir = os.path.join(args.res_dir, cur_task)
         if not os.path.exists(res_dir):
             os.makedirs(res_dir)
-        output_fn = os.path.join(res_dir, "test_{}.output".format(criteria))
-        gold_fn = os.path.join(res_dir, "test_{}.gold".format(criteria))
+        output_fn = os.path.join(res_dir, f"test_{criteria}.output")
+        gold_fn = os.path.join(res_dir, f"test_{criteria}.gold")
         with open(output_fn, 'w') as f, open(gold_fn, 'w') as f1:
             for pred_nl, gold in zip(pred_nls, eval_examples):
                 dev_accs.append(pred_nl.strip() == gold.target.strip())
@@ -161,11 +158,9 @@ def eval_bleu(args, eval_data, eval_examples, model, tokenizer, split_tag, cur_t
             bleu = 0.0
             codebleu = 0.0
 
-        result = {}
         em = np.mean(dev_accs) * 100
-        result['em'] = em
-        result['bleu'] = bleu
-        if not args.task == 'summarize' and split_tag == 'test':
+        result = {'em': em, 'bleu': bleu}
+        if args.task != 'summarize' and split_tag == 'test':
             result['codebleu'] = codebleu * 100
 
     logger.info("***** Eval results [%s] *****", cur_task)

@@ -30,8 +30,8 @@ PROMPT_DICT = {
 
 def get_model_size(model):
     model_parameters = filter(lambda p: p.requires_grad, model.parameters())
-    model_size = sum([np.prod(p.size()) for p in model_parameters])
-    return "{}M".format(round(model_size / 1e+6))
+    model_size = sum(np.prod(p.size()) for p in model_parameters)
+    return f"{round(model_size / 1000000.0)}M"
 
 
 def freeze_decoder_except_xattn_codegen(model):
@@ -53,7 +53,7 @@ def freeze_decoder_except_xattn_codegen(model):
 
 
 def run_training(args, model, train_data):
-    print(f"Starting main loop")
+    print("Starting main loop")
 
     training_args = TrainingArguments(
         report_to='tensorboard',
@@ -167,7 +167,7 @@ def main(args):
     train_data = load_tokenize_data(args)
 
     if args.data_num != -1:
-        train_data = train_data.select([i for i in range(args.data_num)])
+        train_data = train_data.select(list(range(args.data_num)))
 
     # Load model from `args.load`
     model = AutoModelForSeq2SeqLM.from_pretrained(args.load, torch_dtype=torch.float16,

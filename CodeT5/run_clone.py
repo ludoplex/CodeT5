@@ -68,7 +68,6 @@ def evaluate(args, model, eval_examples, eval_data, write_to_pred=False):
     logger.info("  Num examples = %d", len(eval_examples))
     logger.info("  Batch size = %d", args.eval_batch_size)
     eval_loss = 0.0
-    nb_eval_steps = 0
     model.eval()
     logits = []
     y_trues = []
@@ -80,7 +79,6 @@ def evaluate(args, model, eval_examples, eval_data, write_to_pred=False):
             eval_loss += lm_loss.mean().item()
             logits.append(logit.cpu().numpy())
             y_trues.append(labels.cpu().numpy())
-        nb_eval_steps += 1
     logits = np.concatenate(logits, 0)
     y_trues = np.concatenate(y_trues, 0)
     best_threshold = 0.5
