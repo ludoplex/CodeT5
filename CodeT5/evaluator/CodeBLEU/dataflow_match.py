@@ -26,7 +26,7 @@ def calc_dataflow_match(references, candidate, lang):
 
 
 def corpus_dataflow_match(references, candidates, lang):
-    LANGUAGE = Language(root_dir + '/parser/my-languages.so', lang)
+    LANGUAGE = Language(f'{root_dir}/parser/my-languages.so', lang)
     parser = Parser()
     parser.set_language(LANGUAGE)
     parser = [parser, dfg_function[lang]]
@@ -62,8 +62,7 @@ def corpus_dataflow_match(references, candidates, lang):
         print(
             "WARNING: There is no reference data-flows extracted from the whole corpus, and the data-flow match score degenerates to 0. Please consider ignoring this score.")
         return 0
-    score = match_count / total_count
-    return score
+    return match_count / total_count
 
 
 def get_data_flow(code, parser):
@@ -87,10 +86,7 @@ def get_data_flow(code, parser):
                 indexs.add(d[1])
             for x in d[-1]:
                 indexs.add(x)
-        new_DFG = []
-        for d in DFG:
-            if d[1] in indexs:
-                new_DFG.append(d)
+        new_DFG = [d for d in DFG if d[1] in indexs]
         codes = code_tokens
         dfg = new_DFG
     except:
@@ -103,11 +99,7 @@ def get_data_flow(code, parser):
             dic[d[1]] = d
         else:
             dic[d[1]] = (d[0], d[1], d[2], list(set(dic[d[1]][3] + d[3])), list(set(dic[d[1]][4] + d[4])))
-    DFG = []
-    for d in dic:
-        DFG.append(dic[d])
-    dfg = DFG
-    return dfg
+    return list(dic.values())
 
 
 def normalize_dataflow_item(dataflow_item):
@@ -118,10 +110,7 @@ def normalize_dataflow_item(dataflow_item):
     par_vars_pos_list = dataflow_item[4]
 
     var_names = list(set(par_vars_name_list + [var_name]))
-    norm_names = {}
-    for i in range(len(var_names)):
-        norm_names[var_names[i]] = 'var_' + str(i)
-
+    norm_names = {var_names[i]: f'var_{str(i)}' for i in range(len(var_names))}
     norm_var_name = norm_names[var_name]
     relationship = dataflow_item[2]
     norm_par_vars_name_list = [norm_names[x] for x in par_vars_name_list]
@@ -139,10 +128,10 @@ def normalize_dataflow(dataflow):
         par_vars_name_list = item[3]
         for name in par_vars_name_list:
             if name not in var_dict:
-                var_dict[name] = 'var_' + str(i)
+                var_dict[name] = f'var_{str(i)}'
                 i += 1
         if var_name not in var_dict:
-            var_dict[var_name] = 'var_' + str(i)
+            var_dict[var_name] = f'var_{str(i)}'
             i += 1
         normalized_dataflow.append((var_dict[var_name], relationship, [var_dict[x] for x in par_vars_name_list]))
     return normalized_dataflow

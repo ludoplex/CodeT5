@@ -28,9 +28,7 @@ def get_feats(model, tokenizer, data_loader, max_length, device, desc='Get feats
         embed = model(text_input.input_ids, attention_mask=text_input.attention_mask)
         embeds.append(embed)
 
-    embeds = torch.cat(embeds, dim=0)
-
-    return embeds
+    return torch.cat(embeds, dim=0)
 
 
 @torch.no_grad()
@@ -49,11 +47,7 @@ def contrast_evaluation(text_embeds, code_embeds, img2txt):
     tr10 = 100.0 * len(np.where(ranks < 10)[0]) / len(ranks)
     mrr = 100.0 * np.mean(1 / (ranks + 1))
 
-    eval_result = {'r1': tr1,
-                   'r5': tr5,
-                   'r10': tr10,
-                   'mrr': mrr}
-    return eval_result
+    return {'r1': tr1, 'r5': tr5, 'r10': tr10, 'mrr': mrr}
 
 
 def main(args):

@@ -1,5 +1,5 @@
 from human_eval.data import read_problems, write_jsonl, stream_jsonl
-import glob 
+import glob
 from tqdm import tqdm
 import argparse
 
@@ -22,14 +22,14 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-files = sorted(glob.glob(args.path + '/*.jsonl'))
-print("{} files in {}".format(len(files), args.path))
+files = sorted(glob.glob(f'{args.path}/*.jsonl'))
+print(f"{len(files)} files in {args.path}")
 
 problems = read_problems('data/HumanEval.jsonl.gz')
 
 output = []
 for code_file in tqdm(files, total=len(files)):
-    codes = [c for c in stream_jsonl(code_file)]
+    codes = list(stream_jsonl(code_file))
     if args.add_prompt: 
         for code in codes: 
             task_id = code['task_id']
@@ -40,8 +40,8 @@ for code_file in tqdm(files, total=len(files)):
                 next_line = completion.index('\n')
                 completion = code['completion'][def_line+next_line+1:]
                 code['all_code'] = prompt + completion 
-    
+
     output += codes 
-    
-print("save to {}".format(args.out_path))
+
+print(f"save to {args.out_path}")
 write_jsonl(args.out_path, output)

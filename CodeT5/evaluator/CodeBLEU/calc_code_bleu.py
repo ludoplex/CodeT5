@@ -36,7 +36,12 @@ def get_codebleu(refs, hyp, lang, params='0.25,0.25,0.25,0.25'):
 
     # calculate weighted ngram match
     root_dir = os.path.dirname(__file__)
-    keywords = [x.strip() for x in open(root_dir + '/keywords/' + lang + '.txt', 'r', encoding='utf-8').readlines()]
+    keywords = [
+        x.strip()
+        for x in open(
+            f'{root_dir}/keywords/{lang}.txt', 'r', encoding='utf-8'
+        ).readlines()
+    ]
 
     def make_weights(reference_tokens, key_word_list):
         return {token: 1 if token in key_word_list else 0.2 for token in reference_tokens}

@@ -75,12 +75,11 @@ def eval_ppl_epoch(args, eval_data, eval_examples, model, tokenizer):
         eval_loss += loss.item()
         batch_num += 1
     eval_loss = eval_loss / batch_num
-    eval_ppl = round(np.exp(eval_loss), 5)
-    return eval_ppl
+    return round(np.exp(eval_loss), 5)
 
 
 def eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, split_tag, criteria):
-    logger.info("  ***** Running bleu evaluation on {} data*****".format(split_tag))
+    logger.info(f"  ***** Running bleu evaluation on {split_tag} data*****")
     logger.info("  Num examples = %d", len(eval_examples))
     logger.info("  Batch size = %d", args.eval_batch_size)
     eval_sampler = SequentialSampler(eval_data)
@@ -93,7 +92,7 @@ def eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, split_tag,
     model.eval()
     pred_ids = []
     bleu, codebleu = 0.0, 0.0
-    for batch in tqdm(eval_dataloader, total=len(eval_dataloader), desc="Eval bleu for {} set".format(split_tag)):
+    for batch in tqdm(eval_dataloader, total=len(eval_dataloader), desc=f"Eval bleu for {split_tag} set"):
         source_ids = batch[0].to(args.device)
         source_mask = source_ids.ne(tokenizer.pad_token_id)
         with torch.no_grad():
@@ -113,9 +112,9 @@ def eval_bleu_epoch(args, eval_data, eval_examples, model, tokenizer, split_tag,
 
     pred_nls = [tokenizer.decode(id, skip_special_tokens=True, clean_up_tokenization_spaces=False) for id in pred_ids]
 
-    output_fn = os.path.join(args.res_dir, "test_{}.output".format(criteria))
-    gold_fn = os.path.join(args.res_dir, "test_{}.gold".format(criteria))
-    src_fn = os.path.join(args.res_dir, "test_{}.src".format(criteria))
+    output_fn = os.path.join(args.res_dir, f"test_{criteria}.output")
+    gold_fn = os.path.join(args.res_dir, f"test_{criteria}.gold")
+    src_fn = os.path.join(args.res_dir, f"test_{criteria}.src")
 
     if args.task in ['defect']:
         target_dict = {0: 'false', 1: 'true'}

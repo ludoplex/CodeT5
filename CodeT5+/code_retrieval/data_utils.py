@@ -9,19 +9,18 @@ def create_dataset(data_dir, task):
         val_dataset = advtest_search_eval_text(data_dir, task, 'valid')
         test_dataset = advtest_search_eval_text(data_dir, task, 'test')
         codebase_dataset = csn_search_eval_code(data_dir, task, 'test.jsonl')
-        return train_dataset, val_dataset, test_dataset, codebase_dataset
     elif task == 'cosqa':
         train_dataset = cosqa_search_train(data_dir, task, 'cosqa-retrieval-train-19604.json')
         val_dataset = cosqa_search_eval_text(data_dir, task, 'cosqa-retrieval-dev-500.json')
         test_dataset = cosqa_search_eval_text(data_dir, task, 'cosqa-retrieval-test-500.json')
         codebase_dataset = cosqa_search_eval_code(data_dir, task)
-        return train_dataset, val_dataset, test_dataset, codebase_dataset
     else:
         train_dataset = csn_search_train(data_dir, task, 'train')
         val_dataset = csn_search_eval_text(data_dir, task, 'valid')
         test_dataset = csn_search_eval_text(data_dir, task, 'test')
         codebase_dataset = csn_search_eval_code(data_dir, task, 'codebase.jsonl')
-        return train_dataset, val_dataset, test_dataset, codebase_dataset
+
+    return train_dataset, val_dataset, test_dataset, codebase_dataset
 
 
 def create_sampler(datasets, shuffles, num_tasks, global_rank):
@@ -110,15 +109,10 @@ def read_cosqa_search_examples(filename):
     with open(filename, encoding="utf-8") as f:
         if "code_idx_map" in filename:
             js = json.load(f)
-            for key in js:
-                examples.append(
-                    Example(
-                        idx=js[key],
-                        text="",
-                        code=key,
-                        url=js[key]
-                    )
-                )
+            examples.extend(
+                Example(idx=js[key], text="", code=key, url=js[key])
+                for key in js
+            )
         else:
             data = json.load(f)
             for idx, js in enumerate(data):

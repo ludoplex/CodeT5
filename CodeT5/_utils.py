@@ -3,16 +3,15 @@ import json
 
 def add_lang_by_task(target_str, task, sub_task):
     if task == 'summarize':
-        target_str = '<en> ' + target_str
-    elif task == 'refine':
-        target_str = '<java> ' + target_str
+        target_str = f'<en> {target_str}'
+    elif task == 'refine' or task != 'translate' and task == 'concode':
+        target_str = f'<java> {target_str}'
     elif task == 'translate':
-        if sub_task == 'java-cs':
-            target_str = '<c_sharp> ' + target_str
-        else:
-            target_str = '<java> ' + target_str
-    elif task == 'concode':
-        target_str = '<java> ' + target_str
+        target_str = (
+            f'<c_sharp> {target_str}'
+            if sub_task == 'java-cs'
+            else f'<java> {target_str}'
+        )
     elif task == 'defect':
         target_str = target_str
     return target_str
@@ -23,9 +22,9 @@ def convert_examples_to_features(item):
 
     if args.model_type in ['t5', 'codet5'] and args.add_task_prefix:
         if args.sub_task != 'none':
-            source_str = "{} {}: {}".format(args.task, args.sub_task, example.source)
+            source_str = f"{args.task} {args.sub_task}: {example.source}"
         else:
-            source_str = "{}: {}".format(args.task, example.source)
+            source_str = f"{args.task}: {example.source}"
     else:
         source_str = example.source
 
@@ -61,8 +60,8 @@ def convert_examples_to_features(item):
 def convert_clone_examples_to_features(item):
     example, example_index, tokenizer, args = item
     if args.model_type in ['t5', 'codet5'] and args.add_task_prefix:
-        source_str = "{}: {}".format(args.task, example.source)
-        target_str = "{}: {}".format(args.task, example.target)
+        source_str = f"{args.task}: {example.source}"
+        target_str = f"{args.task}: {example.target}"
     else:
         source_str = example.source
         target_str = example.target
@@ -75,7 +74,7 @@ def convert_clone_examples_to_features(item):
 def convert_defect_examples_to_features(item):
     example, example_index, tokenizer, args = item
     if args.model_type in ['t5', 'codet5'] and args.add_task_prefix:
-        source_str = "{}: {}".format(args.task, example.source)
+        source_str = f"{args.task}: {example.source}"
     else:
         source_str = example.source
     code = tokenizer.encode(source_str, max_length=args.max_source_length, padding='max_length', truncation=True)
@@ -295,10 +294,7 @@ def read_clone_examples(filename, data_num):
             url1, url2, label = line.split('\t')
             if url1 not in url_to_code or url2 not in url_to_code:
                 continue
-            if label == '0':
-                label = 0
-            else:
-                label = 1
+            label = 0 if label == '0' else 1
             data.append(CloneExample(url_to_code[url1], url_to_code[url2], label, url1, url2))
             idx += 1
             if idx == data_num:
